@@ -315,7 +315,7 @@ def _format_datetime(raw) -> str:
     return str(raw)
 
 
-def _calc_age(raw) -> int | None:
+def _calc_age(raw) -> "Optional[int]":
     """生年月日から現在の年齢を計算します"""
     if not raw:
         return None
@@ -334,7 +334,6 @@ def _calc_age(raw) -> int | None:
             return None
         today = datetime.now()
         age = today.year - dob.year
-        # 誕生日がまだ来ていない場合は1引く
         if (today.month, today.day) < (dob.month, dob.day):
             age -= 1
         return age
