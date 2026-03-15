@@ -320,16 +320,28 @@ def _calc_age(raw) -> "Optional[int]":
     if not raw:
         return None
     try:
+        dob = None
         if isinstance(raw, (int, float)):
             dob = datetime.fromtimestamp(raw / 1000, tz=timezone.utc)
         else:
-            dob = None
-            for fmt in ("%Y-%m-%dT%H:%M:%S", "%Y-%m-%d"):
-                try:
-                    dob = datetime.strptime(str(raw)[: len(fmt)], fmt)
-                    break
-                except ValueError:
-                    continue
+            raw_str = str(raw).strip()
+            if raw_str.isdigit():
+                dob = datetime.fromtimestamp(int(raw_str) / 1000, tz=timezone.utc)
+            else:
+                for fmt in (
+                    "%Y-%m-%dT%H:%M:%S",
+                    "%Y-%m-%d",
+                    "%d.%b %Y",
+                    "%d.%b.%Y",
+                    "%Y/%m/%d",
+                    "%d/%m/%Y",
+                    "%m/%d/%Y",
+                ):
+                    try:
+                        dob = datetime.strptime(raw_str[: len(fmt) + 2], fmt)
+                        break
+                    except ValueError:
+                        continue
         if dob is None:
             return None
         today = datetime.now()
@@ -339,7 +351,6 @@ def _calc_age(raw) -> "Optional[int]":
         return age
     except Exception:
         return None
-
 
 def _format_address_jp(customer: dict) -> str:
     """
