@@ -175,14 +175,15 @@ class BokunClient:
 
         address = _format_address_jp(customer)
 
-        dob = _format_date(customer.get("dateOfBirth", ""))
+        dob_raw = customer.get("dateOfBirth", "")
+        dob = _format_date(dob_raw)
+        age = _calc_age(dob_raw)
+        dob_with_age = f"{dob}（{age}歳）" if dob and age is not None else dob
+
         booking_date = _format_date(booking.get("creationDate", ""))
         phone = _format_phone(customer.get("phoneNumber", ""))
 
-        # 利用日: フル予約では activityBookings[0].startDate を優先
         start_date = _extract_start_date(booking)
-
-        # プラン名
         product_title = _extract_product_title(booking)
 
         return {
@@ -191,7 +192,8 @@ class BokunClient:
             "first_name": first_name,
             "address": address,
             "phone": phone,
-            "date_of_birth": dob,
+            "date_of_birth": dob_with_age,
+            "age": str(age) if age is not None else "",
             "confirmation_code": booking.get("confirmationCode", ""),
             "booking_date": booking_date,
             "start_date": start_date,
@@ -311,6 +313,33 @@ def _format_datetime(raw) -> str:
         except ValueError:
             continue
     return str(raw)
+
+
+def _calc_age(raw) -> int | None:
+    """生年月日から現在の年齢を計算します"""
+    if not raw:
+        return None
+    try:
+        if isinstance(raw, (int, float)):
+            dob = datetime.fromtimestamp(raw / 1000, tz=timezone.utc)
+        else:
+            dob = None
+            for fmt in ("%Y-%m-%dT%H:%M:%S", "%Y-%m-%d"):
+                try:
+                    dob = datetime.strptime(str(raw)[: len(fmt)], fmt)
+                    break
+                except ValueError:
+                    continue
+        if dob is None:
+            return None
+        today = datetime.now()
+        age = today.year - dob.year
+        # 誕生日がまだ来ていない場合は1引く
+        if (today.month, today.day) < (dob.month, dob.day):
+            age -= 1
+        return age
+    except Exception:
+        return None
 
 
 def _format_address_jp(customer: dict) -> str:
