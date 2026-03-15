@@ -1,0 +1,17 @@
+# APIキー（絶対にGitHubにアップしない）
+.env
+
+# 保存済みテンプレート（GitHubにはdefault_template.docxとして別途アップ）
+saved_template.docx
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# バッチファイル（ローカル専用）
+アプリ起動.bat
